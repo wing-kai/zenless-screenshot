@@ -1,0 +1,43 @@
+# .github/workflows/deploy.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main # 当代码推送到 gh-pages 分支时触发部署
+
+permissions:
+  contents: write # 允许 Actions 写入仓库内容，包括推送到分支
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行环境
+
+    steps:
+      - name: Checkout # 检出代码
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js # 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x' # 推荐使用 LTS 版本，例如 18.x 或 20.x
+          cache: 'npm' # 缓存 npm 依赖，加快构建速度
+
+      - name: Install dependencies # 安装项目依赖
+        run: npm install
+
+      - name: Build project # 构建 Vite 项目
+        run: npm run build
+
+      - name: Add .nojekyll file # <-- 新增这一步
+        run: touch ./dist/.nojekyll # 在 dist 目录中创建 .nojekyll 文件
+
+      - name: Deploy to GitHub Pages # 部署到 GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3 # 使用 peaceiris 的部署 Action
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # GitHub 提供的默认 token
+          publish_dir: ./dist # 指定要部署的目录，Vite 默认构建到 dist
+          publish_branch: gh-pages # 指定部署到的分支，通常是 gh-pages
+          # 如果你的 GitHub Pages 是从 main 分支的根目录提供服务，可以改为：
+          # publish_branch: main
+          # cname: your-custom-domain.com # 如果你使用了自定义域名，可以在这里配置
