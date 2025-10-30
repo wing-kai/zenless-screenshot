@@ -14,6 +14,7 @@
   },
   "label": {
     "background_color": "画像の背景色",
+    "render_count": "画像重ね合わせレンダリング数",
     "theme_mode": "テーマモード"
   },
   "language": {

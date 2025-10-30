@@ -64,6 +64,16 @@ const Setting = defineComponent({
 })
 
 const DEFAULT_BACKGROUND_COLOR = '#222222'
+const DEFAULT_RENDER_COUNT = 5
+
+/** 根据传入的数字，输出指定长度的数组 */
+const getArray = (length: number) => {
+  const arr = []
+  for (let i = 0; i < length; i++) {
+    arr.push(i)
+  }
+  return arr
+}
 
 class FileObject {
   readonly originFile: File
@@ -71,6 +81,7 @@ class FileObject {
 
   readonly image: HTMLImageElement
   public backgroundColor: string = DEFAULT_BACKGROUND_COLOR
+  public renderCount: number = DEFAULT_RENDER_COUNT
 
   constructor(file: File) {
     this.id = uuidv4()
@@ -87,8 +98,10 @@ class FileObject {
     ctx.fillStyle = this.backgroundColor
     ctx.fillRect(0, 0, this.image.width, this.image.height)
 
-    // drawImage
-    ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height)
+    getArray(this.renderCount).forEach(() => {
+      // drawImage
+      ctx.drawImage(this.image, 0, 0, this.image.width, this.image.height)
+    })
   }
 
   async getFile() {
@@ -164,6 +177,8 @@ const usePreviewDialogStore = defineStore('preview-dialog', {
       show: false,
       file: null as FileObject | null,
       backgroundColor: DEFAULT_BACKGROUND_COLOR,
+      /** 图片叠加渲染数 */
+      renderCount: DEFAULT_RENDER_COUNT
     }
   },
   actions: {
@@ -229,6 +244,11 @@ const App = defineComponent({
         file.backgroundColor = value
       })
     })
+    watch(() => previewDialogStore.renderCount, (value) => {
+      fileStore.files.forEach(file => {
+        file.renderCount = value
+      })
+    })
 
     const onClickPreviewOneFile = (index: number) => () => {
       previewDialogStore.showDialog(fileStore.files[index]!)
@@ -264,6 +284,8 @@ const App = defineComponent({
             <n-divider class="m-0!"></n-divider>
             <n-h3 class="m-0!">{t('label.background_color')}</n-h3>
             <n-color-picker v-model:value={previewDialogStore.backgroundColor} modes={['hex']}></n-color-picker>
+            <n-h3 class="m-0!">{t('label.render_count')}</n-h3>
+            <n-input-number v-model:value={previewDialogStore.renderCount} min={1} max={30}></n-input-number>
             <n-h3 class="m-0! mt-auto!">{t('label.theme_mode')}</n-h3>
             <n-divider class="m-0!"></n-divider>
             <Setting />
@@ -294,11 +316,15 @@ const App = defineComponent({
                             </div>
                             <svg class="w-full" viewBox="0 0 160 90">
                               <rect x="0" y="0" width="160" height="90" fill={previewDialogStore.backgroundColor}></rect>
-                              <image
-                                width="100%" height="100%"
-                                preserveAspectRatio="xMidYMid meet"
-                                xlinkHref={file.image.src}
-                              />
+                              {
+                                getArray(file.renderCount).map(() => (
+                                  <image
+                                    width="100%" height="100%"
+                                    preserveAspectRatio="xMidYMid meet"
+                                    xlinkHref={file.image.src}
+                                  />
+                                ))
+                              }
                             </svg>
                             <div class="flex gap-2">
                               <n-button size="small" type="info" onClick={onClickPreviewOneFile(index)}>{t('button.preview')}</n-button>
@@ -328,11 +354,13 @@ const App = defineComponent({
               <rect x="0" y="0" width="160" height="90" fill={previewDialogStore.backgroundColor}></rect>
               {
                 previewDialogStore.file && (
-                  <image
-                    width="100%" height="100%"
-                    preserveAspectRatio="xMidYMid meet"
-                    xlinkHref={previewDialogStore.file!.image.src}
-                  />
+                  getArray(previewDialogStore.file.renderCount).map(() => (
+                    <image
+                      width="100%" height="100%"
+                      preserveAspectRatio="xMidYMid meet"
+                      xlinkHref={previewDialogStore.file!.image.src}
+                    />
+                  ))
                 )
               }
             </svg>

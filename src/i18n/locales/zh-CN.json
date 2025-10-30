@@ -14,6 +14,7 @@
   },
   "label": {
     "background_color": "图片底色",
+    "render_count": "图片叠加渲染数",
     "theme_mode": "明亮模式"
   },
   "language": {
